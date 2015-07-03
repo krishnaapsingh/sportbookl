@@ -1,0 +1,25 @@
+<% content_for :breadcrumb do %>
+  <%= link_to 'Wettpools', pools_path() %>
+<% end %>
+
+
+
+<%= render partial: 'games_upcoming', locals: { games: @upcoming_games } %>
+
+<h3>Wettpools</h3>
+
+<ul>
+<% @pools.each do |pool| %>
+  <li><%= link_to pool.full_title, pool_path(pool) %>
+    (
+      Manager <%= pool.user.name %>,
+      <%= link_to "#{pool.players.size} Mitspieler", plays_path( :pool_id => pool.id ) %>
+    )
+    <br>
+    <div class='pool welcome-header'><%= raw( pool.welcome_header_html ) %></div>
+  </li>
+<% end %>
+</ul>
+
+<%= render partial: 'games_past', locals: { games: @past_games } %>
+

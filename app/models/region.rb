@@ -1,0 +1,3 @@
+
+Region = WorldDb::Model::Region
+

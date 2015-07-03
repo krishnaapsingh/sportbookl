@@ -1,0 +1,12 @@
+es:
+  signin: "Sign In"
+  signout: "Sign Out"
+  upcoming_games: "Upcoming Games"
+  past_games: "Past Games"
+  more_games: "More Games"
+  welcome:  "Welcome"
+  edit: "Edit"
+  back: "Back"
+  edit_bets: "Edit Bets"
+  save_bets: "Save Bets"
+  quickbets: "Quickbets"

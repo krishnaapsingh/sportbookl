@@ -1,0 +1,230 @@
+<% title( @user.name, @pool.full_title ) %>
+
+<% content_for :breadcrumb do %>
+ <%= link_to 'Wettpools', pools_path() %> ›
+ <%= link_to @pool.full_title, pool_path(@pool) %> ›
+ <%= link_to @user.name, play_path( @play ) %> ›
+ <%= link_to 'Edit', edit_play_path( @play ) %>
+<% end %>
+
+<p class='view'>
+  View: <%= link_to 'Tipps', edit_play_path( @play, :odds => 'f' ) %>
+          ⋅
+        <%= link_to 'Tipps+Quoten', edit_play_path( @play, :odds => 't' ) %>
+</p>
+
+
+<style>
+ /* styling for table_expander */
+
+  tr.bonus-round {
+    background-color: silver;
+  }
+
+  tr.game-round,
+  tr.bonus-round {
+    cursor: pointer;
+  }
+  
+  tr.game-round.expander-hide,
+  tr.bonus-round.expander-hide {
+   background-color: navy;
+   color: white;
+  }
+  tr.game-round.expander-hide td,
+  tr.bonus-round.expander-hide td {
+   background-color: navy;
+   color: white;
+  }
+
+  
+  tr.game-round.expander-hide td.first,
+  tr.game-round.expander-show td.first,
+  tr.bonus-round.expander-hide td.first,
+  tr.bonus-round.expander-show td.first {
+    padding-left: 17px;   /* 2+15 */
+    background-repeat: no-repeat;
+    background-position: left center;
+  }
+      
+  tr.game-round.expander-hide td.first,
+  tr.bonus-round.expander-hide td.first {
+    background-image: url(<%= asset_path('down-arrow.png') %>);
+  }
+
+  tr.game-round.expander-show td.first,
+  tr.bonus-round.expander-show td.first {
+    background-image: url(<%= asset_path('right-arrow.png') %>);
+  }
+ 
+ 
+</style>
+
+
+
+<script>
+  // add hotkey handler for quick tip autofill
+
+ // function testTimer()
+ // {
+ //   $( '#debug').append( '<p>' + new Date().toString() + '</p>' );
+ // }
+
+ $(document).ready( function() {  
+  
+  table_expander( 'table.play', 'game-round' );
+  table_expander( 'table.bonus', 'bonus-round' );
+  
+  recalcPlayTips();
+  
+  $(document).on( 'keydown', function( event ) {
+    if( (event.ctrlKey && event.which == 81) || (event.which == 81) )  // ASCII 81 = Q (Quicktipp)
+    {
+       event.preventDefault();
+       autofillPlayTips();
+       recalcPlayTips();
+       return false;  // todo: check if return false is  needed?
+     }
+     else if( (event.ctrlKey && event.which == 67) || (event.which == 67) )  // ASCII 67 = C (Clean/Clear)
+     {
+       event.preventDefault();
+       clearPlayTips();
+       recalcPlayTips();
+       return false;  // todo: check if return false is  needed?      
+     }
+     else if( (event.ctrlKey && event.which == 82) || (event.which == 82) )  // ASCII 82 = R (Refresh/Recalcuate)
+     {
+       event.preventDefault();
+       recalcPlayTips();
+       return false;  // todo: check if return false is  needed?
+     }
+  });
+  
+  // quick and dirty hack
+  //  do a recalc every ~2 seconds (e.g. 1500 ms)
+  
+  var recalcTimer = setInterval( recalcPlayTips, 1500 );
+  
+});
+</script>
+
+
+<table width='100%' cellspacing=0>
+  <tr>
+    <!-- left -->
+    <td>
+       <h1><%= @user.name %> - <%=  @pool.full_title %> Tipps</h1>
+    </td>
+    <!-- right -->
+    <td style='text-align: right;'>
+        <%= link_to t(:quickbets), '#', :class => 'btn', :onclick => 'autofillPlayTips();' %>
+    </td>
+  </tr>
+</table>
+
+
+
+
+ <!-- NB: namespaced model gets converted to sportsdb_models_play but only want user in params, thus, use as: option -->
+<%= form_for @play, :as => :play, :url => play_path( @play ), :html => { :method => 'put' } do |f| %>  
+
+
+<!-- todo/fix:
+
+   break into two partials
+   - _edit_flex.html.erb
+   - _edit_fix.html.erb
+  -->
+
+
+<% if @pool.locked? %>
+  <% if @pool.flex? %>
+    <p class='flash notice'><b>Hinweis.</b> Team Abgabefrist abgelaufen. Team Bonustipps gesperrt.</p>
+  <% else %>
+    <p class='flash notice'><b>Hinweis.</b> Abgabefrist abgelaufen. Tippabgabe gesperrt.</p>
+  <% end %>
+<% end %>
+
+
+  
+  
+
+
+<table class='bonus'>
+  <tr class='bonus-round'>
+    <td class='bonus-round-title'>Bonus Tipp - 1. Platz, 2. Platz</td>
+  </tr>
+  
+<% if @pool.locked? %>
+  
+  <%= f.hidden_field :team1_id %>
+  <%= f.hidden_field :team2_id %>
+
+  <tr><td>
+    <%= render_play_teams( @play ) %>
+  </td></tr>
+  
+<% else %><!-- pool.locked? clause -->
+<% if @pool.flex? %>
+ <!-- NB: only needed for flex - in fixed winner gets calculated automatically -->
+
+  <tr><td>
+  <%= render_play_teams_for_form( @play, f ) %>
+  </td></tr>
+
+<% else %><!-- pool fix clause -->
+  <%= f.hidden_field :team1_id %>
+  <%= f.hidden_field :team2_id %>
+<% end %><!-- pool.flex? -->
+<% end %><!-- pool.locked? -->
+
+
+  <tr><td>
+  <%= render_event_quotes( @pool.event ) if @show_odds %>
+  </td></tr>
+
+</table>
+
+
+
+
+<% if @pool.flex? %>
+ 
+ <p>
+  <% @pool.event.flex_rounds.each_with_index do |round,i| %>
+    <% if i > 0 %>
+      &bull;
+    <% end %>
+    <!-- todo: use prettified cleaned url
+         add ready only attr to model      
+      -->
+    <%= link_to round.title, "##{round.id}" %>
+  <% end %>
+ </p>
+ 
+ <!-- hack:
+     use group view for flex too if world cup e.g. event.league.key == 'world'
+   -->
+
+   <% if @pool.event.league.key == 'world' || @pool.event.league.key == 'cl' %>
+     <%= render :partial => 'games_by_group',  :locals => { :groups => @pool.event.groups, :user => @user, :pool => @pool, :f => f, :tabindex => 1000, :show_odds => @show_odds } %>
+     <%= render :partial => 'games_by_round',  :locals => { :rounds => @pool.event.rounds.where(:knockout => true), :user => @user, :pool => @pool, :f => f, :tabindex => 2000, :show_odds => @show_odds } %>
+   <% else %>
+     <%= render :partial => 'games_by_round',  :locals => { :rounds => @pool.event.flex_rounds, :user => @user, :pool => @pool, :f => f, :tabindex => 1000, :show_odds => @show_odds } %>
+     <!-- todo: include group tables if groups exist -->
+   <% end %>
+
+<% else %>
+  <%= render :partial => 'games_by_group',  :locals => { :groups => @pool.event.groups, :user => @user, :pool => @pool, :f => f, :tabindex => 1000, :show_odds => @show_odds } %>
+  <%= render :partial => 'games_by_round',  :locals => { :rounds => @pool.event.fix_playoff_rounds, :user => @user, :pool => @pool, :f => f, :tabindex => 2000, :show_odds => @show_odds } %>
+<% end %>
+
+
+
+<p>
+  <%= f.submit t(:save_bets), :class => 'btn-primary' %>
+  <%= link_to t(:back), play_path( @play ), :class => 'btn' %>
+</p>  
+<% end %>
+
+<div id='debug' style='display: none;'></div>

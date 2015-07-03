@@ -1,0 +1,2 @@
+
+Continent = WorldDb::Model::Continent

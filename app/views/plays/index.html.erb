@@ -1,0 +1,131 @@
+<% title( 'Alle', @pool.full_title ) %>
+
+<% content_for :breadcrumb do %>
+ <%= link_to 'Wettpools', pools_path() %> ›
+ <%= link_to @pool.full_title, pool_path(@pool) %> ›
+ <%= link_to 'Alle Tipps', plays_path( :pool_id => @pool.id ) %>
+<% end %>
+
+
+<p>
+  View: <%= link_to 'Tipps', plays_path( :pool_id => @pool.id )  %>
+          ⋅
+        <%= link_to 'Punkte', plays_path( :pool_id => @pool.id, :pts => 't', :tips => 'f' ) %>
+          ⋅
+        <%= link_to 'Tipps+Punkte', plays_path( :pool_id => @pool.id, :pts => 't' ) %>
+        
+</p>
+
+<!-- todo:
+   use current_play = nil or obj  instead of machmit  => lets us use play route for edit!!
+  -->
+
+<% machmit = (@pool.players.include?( current_user ) == false) %>
+
+<table width='100%' cellspacing=0>
+  <tr>
+    <!-- left -->
+    <td>
+      <h1><%= @pool.full_title %> Tipps</h1>
+    </td>
+    <!-- right -->
+    <td style='text-align: right;'>
+<% if machmit %>
+  <%= link_to 'Mach mit! Mittippen!', add_player_to_pool_path( @pool ), :class => 'btn-primary' %>
+<% else %>
+  <%= link_to 'Meine Tipps bearbeiten', edit_pool_player_path( @pool, current_user() ), :class => 'btn-primary' %>
+<% end %>
+    </td>
+  </tr>
+</table>
+
+
+<table>
+  <tr>
+    <td><!-- user --></td>
+    <td style='text-align: center;'>1. Platz</td>
+    <td style='text-align: center;'>2. Platz</td>
+    <% if @pool.team3? %><td style='text-align: center;'>3. Platz</td><% end %>
+  </tr>
+  <% @users.each do |user| %>
+    <% play = Play.find_by_pool_id_and_user_id!( @pool.id, user.id ) %>
+    <tr>
+       <td>
+         <span class='<%= hl_style_for_user(user) %>'>
+           <%= link_to user.name, play_path(play.id) %>
+         </span>
+       </td>
+       <%= render_play_team1( play ) %>
+       <%= render_play_team2( play ) %>
+       <%= render_play_team3( play ) if @pool.team3? %>
+    </tr>
+  <% end %><!-- users.each -->
+</table>
+
+
+
+<!-- table columns:
+        1    => toto12x
+        2    => team1
+        3..n => tip 
+       -3    => result
+       -2    => team2
+  last/-1    => date
+  -->
+
+<table class='plays' cellspacing=0>
+<tr>
+  <td colspan='2'></td>
+  <% @users.each do |user| %>
+   <td class='player-name'>
+      <span class='<%= hl_style_for_user(user) %>'>
+    <%= link_to pool_player_path( @pool, user ) do %>
+       <%= raw( user.name.split(' ').join( '<br>' ) ) %>
+    <% end %>
+      </span>
+   </td>
+  <% end %><!-- users.each -->
+</tr>
+
+
+<% @rounds.each do |round| %>
+<tr class='game-round'>
+  <td colspan='2'></td>
+  <td colspan='<%= 3+@users.count %>' class='game-round-title'><%= round.title %></td>
+</tr>
+
+  <% round.games.each do |game| %>
+    <tr>
+     
+       <%= render_game_toto12x( game ) %>
+       
+       <%= render_game_team1( game ) %>
+       
+      <% @users.each do |user| %>
+        <!-- NB: allow missing tip, that is, tip.nil? true !!! -->
+        <% tip = Tip.find_by_user_id_and_pool_id_and_game_id( user.id, @pool.id, game.id ) %>
+        
+        <%= render_tip_score_v2( tip, :show_tips => @show_tips, :show_pts => @show_pts ) %>
+      <% end %><!-- users.each --> 
+
+       <%= render_game_score( game ) %>
+       <%= render_game_team2( game ) %>
+       <%= render_game_date( game ) %>
+     </tr>
+  <% end %> <!-- games.each -->
+<% end %> <!-- rounds.each -->
+
+<tr>
+  <td colspan='2'></td>
+  <% @users.each do |user| %>
+   <td class='player-name'>
+      <span class='<%= hl_style_for_user(user) %>'>
+    <%= link_to pool_player_path( @pool, user ) do %>
+       <%= raw( user.name.split(' ').join( '<br>' ) ) %>
+    <% end %>
+      </span>
+   </td>
+  <% end %><!-- users.each -->
+</tr>
+
+</table>

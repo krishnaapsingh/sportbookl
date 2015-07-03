@@ -1,0 +1,47 @@
+<%= form_for( @pool, :as => :pool, :url => @pool.new_record? ? admin_pools_path() : admin_pool_path(@pool)  ) do |f| %>
+  <% if @pool.errors.any? %>
+    <div id="error_explanation">
+      <h2><%= pluralize(@pool.errors.count, "error") %> prohibited this pool from being saved:</h2>
+
+      <ul>
+      <% @pool.errors.full_messages.each do |msg| %>
+        <li><%= msg %></li>
+      <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <table>
+    <tr>
+      <td><%= f.label :title, 'Titel:' %></td>
+      <td><%= f.text_field :title, 'data-autofocus' => 'true' %></td>
+    </tr>
+    <tr>
+      <td><%= f.label :event_id, 'Veranstaltung:' %></td>
+      <td><%= f.select :event_id, options_from_collection_for_select(Event.all, :id, :full_title) %></td>
+    </tr>
+    <tr>
+      <td><%= f.label :public, 'Public Flag:' %></td>
+      <td>
+        <%= f.radio_button :public, 'true'  %><%= f.label :public_true, 'Ja' %>
+        <%= f.radio_button :public, 'false' %><%= f.label :public_false, 'Nein' %>
+      </td>
+    </tr>
+    <tr>
+      <td><%= f.label :locked, 'Locked Flag:' %></td>
+      <td>
+        <%= f.radio_button :locked, 'true'  %><%= f.label :locked_true, 'Ja' %>
+        <%= f.radio_button :locked, 'false' %><%= f.label :locked_false, 'Nein' %>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><%= f.label :welcome, 'Willkommenstext:' %></td>
+      <td><%= f.text_area :welcome, :size=>'60x15' %></td>
+    </tr>
+  </table>
+  
+  <div class="actions">
+    <%= f.submit 'Speichern', :class => 'btn-primary' %>
+    <%= link_to 'Zurück', admin_pools_path(), :class => 'btn' %>
+  </div>
+<% end %>

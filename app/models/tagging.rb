@@ -1,0 +1,3 @@
+
+
+Tagging = TagDb::Model::Tagging

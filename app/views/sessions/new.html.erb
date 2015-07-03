@@ -1,0 +1,62 @@
+
+<h1>Sportbook</h1>
+
+<table>
+<tr>
+  <td><!-- begin 1st column -->
+<% if request.host == 'sportbook.herokuapp.com' || request.host == 'localhost' %>
+<div>
+  <b>Welcome.</b> Sportbook - A Free, Open Source Sports Betting (or Prediction) Pool
+      (Champions League 2013/14, Premier League 2013/14, Bundesliga 2013/14, World Cup 2014 etc.)
+      in Ruby on Rails.
+
+   <a href="https://github.com/openbookie/sportbook">More &raquo;</a>
+</div>
+<% end %>
+    <!-- end 1st column -->
+  </td>
+  
+  <td><!-- begin 2nd column -->
+
+  <!-- NB: namespaced model gets converted to sportsdb_models_user but only want user in params, thus, use as: option -->
+<%= form_for @user, :as => :user, :url => session_path() do |f| %>
+
+<div style='padding: 20px; background-color: #F1F1F1;'>
+ <div>
+    <%= f.label :email, 'Email' %><br/>
+    <%= f.text_field :email, :data => { :autofocus => true } %>
+ </div>
+ 
+  <div>
+     <%= f.label :password, 'Passwort' %><br/>
+     <%= f.password_field :password %>
+  </div>
+  
+  <div style='padding-top: 15px;' >
+    <%= f.submit t(:signin), :class => 'btn-primary' %>
+  </div>
+</div>  
+
+<% end %>
+  
+   <!-- end 2nd column -->
+  </td>
+</tr>    
+</table>
+
+
+
+
+
+<div style='color: grey;'>
+<hr>
+<p style='font-size: 12px;'>Version Info</p>
+<table>
+<% Prop.order( 'created_at asc' ).all.each do |prop| %>
+  <tr>
+    <td style='font-size: 12px;'><%= "#{prop.key}/#{prop.value}" %></td>
+    <td style='font-size: 12px;'><%= "(#{prop.created_at})" %></td>
+  </tr>
+<% end %>
+</table>
+</div>
